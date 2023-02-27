@@ -17,7 +17,7 @@ pub trait EventBuilder {
 
 pub trait EventSource {
     fn name(&self) -> &str;
-    fn read(&self, sink: Box<dyn Sink>);
+    fn read(&self, sink: Box<dyn EventSink>);
 }
 
 pub trait EventSink {
@@ -31,7 +31,7 @@ pub trait EventSelector {
 
 pub trait EventTransformer {
     fn name(&self) -> &str;
-    fn transform(&mut self, event: Box<dyn Event>) -> Option<Box<dyn Event>>;
+    fn transform(&self, event: Box<dyn Event>) -> Option<Box<dyn Event>>;
 }
 
 pub trait Flow {
@@ -41,9 +41,9 @@ pub trait Flow {
 
 pub trait FlowBuilder {
     fn name(&mut self, name: &str) -> &mut Self;
-    fn source(&mut self, source: Box<dyn Source>) -> &mut Self;
-    fn sink(&mut self, sink: Box<dyn Sink>) -> &mut Self;
-    fn add_filter(&mut self, filter: Box<dyn Filter>) -> &mut Self;
-    fn add_transformer(&mut self, transform: Box<dyn Transformer>) -> &mut Self;
+    fn source(&mut self, source: Box<dyn EventSource>) -> &mut Self;
+    fn sink(&mut self, sink: Box<dyn EventSink>) -> &mut Self;
+    fn add_selector(&mut self, selector: Box<dyn EventSelector>) -> &mut Self;
+    fn add_transformer(&mut self, transform: Box<dyn EventTransformer>) -> &mut Self;
     fn build(&self) -> Box<dyn Flow>;
 }
