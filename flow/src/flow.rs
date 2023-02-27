@@ -207,6 +207,7 @@ impl Flow for FlowEngine {
     }
 
     fn run(&mut self) {
+        // let sink =
         // let source = BaseEventSource::new("source", 100);
         // let sink = BaseEventSink::new("sink");
         // let selector = BaseEventSelector::new("selector", 0);
@@ -216,18 +217,12 @@ impl Flow for FlowEngine {
     }
 }
 
-impl EventSink for FlowEngine {
-    fn next(&mut self, event: Box<dyn Event>) {
-        //println!("FlowEngine: {:?}", event);
-    }
-}
-
 pub struct BaseFlowBuilder {
     name: String,
     source: Option<Box<dyn EventSource>>,
     sink: Option<Box<dyn EventSink>>,
-    // filters: Vec<Box<dyn EventSelector>>,
-    // transformers: Vec<Box<dyn EventTransformer>>,
+    filters: Vec<Box<dyn EventSelector>>,
+    transformers: Vec<Box<dyn EventTransformer>>,
 }
 
 impl BaseFlowBuilder {
@@ -236,8 +231,8 @@ impl BaseFlowBuilder {
             name: name.to_string(),
             source: None,
             sink: None,
-            // filters: Vec::new(),
-            // transformers: Vec::new(),
+            filters: Vec::new(),
+            transformers: Vec::new(),
         }
     }
 
@@ -252,20 +247,19 @@ impl BaseFlowBuilder {
     }
 
     pub fn add_selector(&mut self, selector: Box<dyn EventSelector>) -> &mut Self {
-        //self.filters.push(selector);
+        self.filters.push(selector);
         self
     }
 
     pub fn add_transformer(&mut self, transformer: Box<dyn EventTransformer>) -> &mut Self {
-        //self.transformers.push(transformer);
+        self.transformers.push(transformer);
         self
     }
 
-    pub fn build(&self) -> Box<dyn Flow> {
-        let source = self.source.expect("source is not set");
+    pub fn build(&mut self) -> Box<dyn Flow> {
         Box::new(FlowEngine {
             name: self.name.clone(),
-            source,
+            source: self.source.take().expect("source is not set"),
             filters: Vec::new(),
             transformers: Vec::new(),
         })
