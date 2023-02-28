@@ -10,7 +10,7 @@ impl EventTransformer {
 }
 
 impl IEventTransformer for EventTransformer {
-    fn transform(&self, event: Box<dyn IEvent>) -> Option<Box<dyn IEvent>> {
+    fn transform(&self, event: Box<&dyn IEvent>) -> Option<Box<dyn IEvent>> {
         let mut builder = EventBuilder::new();
         Some(
             builder

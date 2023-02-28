@@ -17,9 +17,15 @@ pub struct EventSink<'a> {
 impl IEventSink for EventSink<'_> {
     fn next(&self, event: Box<dyn IEvent>) {
         let mut event = event;
-        for filter in &self.selectors {
-            if !filter.select(Box::new(event.as_ref())) {
+        for selector in &self.selectors {
+            if !selector.select(Box::new(event.as_ref())) {
                 return;
+            }
+        }
+        // transform
+        for transformer in &self.transformers {
+            if let Some(new_event) = transformer.transform(Box::new(event.as_ref())) {
+                event = new_event;
             }
         }
         self.writer.write(event);
@@ -41,8 +47,8 @@ impl IEventWorker for EventWorker {
 
     fn run(&self) {
         let mut selectors: Vec<Box<&dyn IEventSelector>> = Vec::new();
-        for selectors in &self.selectors {
-            selectors.push(Box::new(selectors.as_ref()));
+        for selector in &self.selectors {
+            selectors.push(Box::new(selector.as_ref()));
         }
         let mut transformers: Vec<Box<&dyn IEventTransformer>> = Vec::new();
         for transformer in &self.transformers {

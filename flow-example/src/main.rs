@@ -1,4 +1,4 @@
-use flow::flow::EventWorkerBuilder;
+use flow::worker::EventWorkerBuilder;
 use flow::readwrite::{ConsoleEventWriter, IterableEventReader};
 use flow::selector::EventSelector;
 

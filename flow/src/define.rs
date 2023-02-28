@@ -23,16 +23,16 @@ pub trait IEventSink {
     fn next(&self, event: Box<dyn IEvent>);
 }
 
-pub trait IEventSelector {
-    fn select(&self, event: Box<&dyn IEvent>) -> bool;
-}
-
 pub trait IEventWriter {
     fn write(&self, event: Box<dyn IEvent>);
 }
 
+pub trait IEventSelector {
+    fn select(&self, event: Box<&dyn IEvent>) -> bool;
+}
+
 pub trait IEventTransformer {
-    fn transform(&self, event: Box<dyn IEvent>) -> Option<Box<dyn IEvent>>;
+    fn transform(&self, event: Box<&dyn IEvent>) -> Option<Box<dyn IEvent>>;
 }
 
 pub trait IEventWorker {
