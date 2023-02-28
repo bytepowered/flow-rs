@@ -34,7 +34,7 @@ impl IEventSink for SynchronizedEventSink<'_> {
 
 pub struct EventWorker {
     name: String,
-    output: Box<dyn IEventInput>,
+    input: Box<dyn IEventInput>,
     output: Box<dyn IEventOutput>,
     selectors: Vec<Box<dyn IEventSelector>>,
     transformers: Vec<Box<dyn IEventTransformer>>,
@@ -60,7 +60,7 @@ impl IEventWorker for EventWorker {
             selectors,
             transformers,
         };
-        self.output.read(Box::new(&sink));
+        self.input.read(Box::new(&sink));
     }
 }
 
@@ -68,7 +68,7 @@ pub struct EventWorkerBuilder {
     name: String,
     input: Option<Box<dyn IEventInput>>,
     output: Option<Box<dyn IEventOutput>>,
-    filters: Vec<Box<dyn IEventSelector>>,
+    selectors: Vec<Box<dyn IEventSelector>>,
     transformers: Vec<Box<dyn IEventTransformer>>,
 }
 
@@ -78,7 +78,7 @@ impl EventWorkerBuilder {
             name: name.to_string(),
             input: None,
             output: None,
-            filters: Vec::new(),
+            selectors: Vec::new(),
             transformers: Vec::new(),
         }
     }
@@ -94,7 +94,7 @@ impl EventWorkerBuilder {
     }
 
     pub fn add_selector(&mut self, selector: Box<dyn IEventSelector>) -> &mut Self {
-        self.filters.push(selector);
+        self.selectors.push(selector);
         self
     }
 
@@ -106,10 +106,10 @@ impl EventWorkerBuilder {
     pub fn build(&mut self) -> Box<dyn IEventWorker> {
         Box::new(EventWorker {
             name: self.name.clone(),
-            output: self.input.take().expect("reader is not set"),
-            output: self.output.take().expect("writer is not set"),
-            selectors: Vec::new(),
-            transformers: Vec::new(),
+            input: self.input.take().expect("input is not set"),
+            output: self.output.take().expect("output is not set"),
+            selectors: self.selectors.drain(..).collect(),
+            transformers: self.transformers.drain(..).collect(),
         })
     }
 }
