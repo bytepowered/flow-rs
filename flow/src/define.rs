@@ -16,7 +16,7 @@ pub trait IEventBuilder {
 }
 
 pub trait IEventReader {
-    fn read(&self, sink: Box<dyn IEventSink>);
+    fn read<'a>(&self, sink: Box<&'a dyn IEventSink>);
 }
 
 pub trait IEventSink {

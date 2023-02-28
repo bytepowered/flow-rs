@@ -41,12 +41,12 @@ impl IFlow for FlowEngine {
             transformers.push(Box::new(transformer.as_ref()));
         }
         let writer = Box::new(self.writer.as_ref());
-        let sink = Box::new(EventSink {
+        let sink = EventSink {
             writer,
             filters,
             transformers,
-        });
-        self.reader.read(sink);
+        };
+        self.reader.read(Box::new(&sink));
     }
 }
 
