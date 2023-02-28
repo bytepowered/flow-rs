@@ -1,4 +1,4 @@
-use crate::define::{IEvent, IEventBuilder, IEventReader, IEventSink, IEventWriter};
+use crate::define::{IEvent, IEventBuilder, IEventInput, IEventSink, IEventOutput};
 use crate::event::EventBuilder;
 
 pub struct IterableEventReader {
@@ -13,7 +13,7 @@ impl IterableEventReader {
     }
 }
 
-impl IEventReader for IterableEventReader {
+impl IEventInput for IterableEventReader {
     fn read<'a>(&self, sink: Box<&'a dyn IEventSink>) {
         for i in 0..self.iter {
             let mut builder = EventBuilder::new();
@@ -37,7 +37,7 @@ impl ConsoleEventWriter {
     }
 }
 
-impl IEventWriter for ConsoleEventWriter {
+impl IEventOutput for ConsoleEventWriter {
     fn write(&self, event: Box<dyn IEvent>) {
         println!("{} {} {} {} {}", event.id(), event.source(), event.tag(), event.timestamp(), event.kind());
     }

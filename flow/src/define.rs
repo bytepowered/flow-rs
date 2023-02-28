@@ -15,7 +15,7 @@ pub trait IEventBuilder {
     fn build(&self) -> Box<dyn IEvent>;
 }
 
-pub trait IEventReader {
+pub trait IEventInput {
     fn read<'a>(&self, sink: Box<&'a dyn IEventSink>);
 }
 
@@ -23,7 +23,7 @@ pub trait IEventSink {
     fn next(&self, event: Box<dyn IEvent>);
 }
 
-pub trait IEventWriter {
+pub trait IEventOutput {
     fn write(&self, event: Box<dyn IEvent>);
 }
 
@@ -42,7 +42,7 @@ pub trait IEventWorker {
 
 pub trait FlowBuilder {
     fn name(&mut self, name: &str) -> &mut Self;
-    fn source(&mut self, source: Box<dyn IEventReader>) -> &mut Self;
+    fn source(&mut self, source: Box<dyn IEventInput>) -> &mut Self;
     fn sink(&mut self, sink: Box<dyn IEventSink>) -> &mut Self;
     fn add_selector(&mut self, selector: Box<dyn IEventSelector>) -> &mut Self;
     fn add_transformer(&mut self, transform: Box<dyn IEventTransformer>) -> &mut Self;
