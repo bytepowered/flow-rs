@@ -1,7 +1,15 @@
-use crate::define::{IEvent, IEventBuilder, IEventReader, IEventSelector, IEventSink, IEventTransformer, IEventWriter, IFlow};
+use crate::define::{
+    IEvent,
+    IEventReader,
+    IEventSelector,
+    IEventSink,
+    IEventTransformer,
+    IEventWorker,
+    IEventWriter,
+};
 
 pub struct EventSink<'a> {
-    pub(crate) filters: Vec<Box<&'a dyn IEventSelector>>,
+    pub(crate) selectors: Vec<Box<&'a dyn IEventSelector>>,
     pub(crate) transformers: Vec<Box<&'a dyn IEventTransformer>>,
     pub(crate) writer: Box<&'a dyn IEventWriter>,
 }
@@ -9,7 +17,7 @@ pub struct EventSink<'a> {
 impl IEventSink for EventSink<'_> {
     fn next(&self, event: Box<dyn IEvent>) {
         let mut event = event;
-        for filter in &self.filters {
+        for filter in &self.selectors {
             if !filter.select(Box::new(event.as_ref())) {
                 return;
             }
@@ -18,23 +26,23 @@ impl IEventSink for EventSink<'_> {
     }
 }
 
-pub struct FlowEngine {
+pub struct EventWorker {
     name: String,
     reader: Box<dyn IEventReader>,
     writer: Box<dyn IEventWriter>,
-    filters: Vec<Box<dyn IEventSelector>>,
+    selectors: Vec<Box<dyn IEventSelector>>,
     transformers: Vec<Box<dyn IEventTransformer>>,
 }
 
-impl IFlow for FlowEngine {
+impl IEventWorker for EventWorker {
     fn name(&self) -> &str {
         &self.name
     }
 
     fn run(&self) {
-        let mut filters: Vec<Box<&dyn IEventSelector>> = Vec::new();
-        for filter in &self.filters {
-            filters.push(Box::new(filter.as_ref()));
+        let mut selectors: Vec<Box<&dyn IEventSelector>> = Vec::new();
+        for selectors in &self.selectors {
+            selectors.push(Box::new(selectors.as_ref()));
         }
         let mut transformers: Vec<Box<&dyn IEventTransformer>> = Vec::new();
         for transformer in &self.transformers {
@@ -43,29 +51,27 @@ impl IFlow for FlowEngine {
         let writer = Box::new(self.writer.as_ref());
         let sink = EventSink {
             writer,
-            filters,
+            selectors,
             transformers,
         };
         self.reader.read(Box::new(&sink));
     }
 }
 
-pub struct FlowBuilder {
+pub struct EventWorkerBuilder {
     name: String,
     reader: Option<Box<dyn IEventReader>>,
     writer: Option<Box<dyn IEventWriter>>,
-    sink: Option<Box<dyn IEventSink>>,
     filters: Vec<Box<dyn IEventSelector>>,
     transformers: Vec<Box<dyn IEventTransformer>>,
 }
 
-impl FlowBuilder {
+impl EventWorkerBuilder {
     pub fn new(name: &str) -> Self {
-        FlowBuilder {
+        EventWorkerBuilder {
             name: name.to_string(),
             reader: None,
             writer: None,
-            sink: None,
             filters: Vec::new(),
             transformers: Vec::new(),
         }
@@ -91,12 +97,12 @@ impl FlowBuilder {
         self
     }
 
-    pub fn build(&mut self) -> Box<dyn IFlow> {
-        Box::new(FlowEngine {
+    pub fn build(&mut self) -> Box<dyn IEventWorker> {
+        Box::new(EventWorker {
             name: self.name.clone(),
             reader: self.reader.take().expect("reader is not set"),
             writer: self.writer.take().expect("writer is not set"),
-            filters: Vec::new(),
+            selectors: Vec::new(),
             transformers: Vec::new(),
         })
     }

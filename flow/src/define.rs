@@ -35,7 +35,7 @@ pub trait IEventTransformer {
     fn transform(&self, event: Box<dyn IEvent>) -> Option<Box<dyn IEvent>>;
 }
 
-pub trait IFlow {
+pub trait IEventWorker {
     fn name(&self) -> &str;
     fn run(&self);
 }
@@ -46,5 +46,5 @@ pub trait FlowBuilder {
     fn sink(&mut self, sink: Box<dyn IEventSink>) -> &mut Self;
     fn add_selector(&mut self, selector: Box<dyn IEventSelector>) -> &mut Self;
     fn add_transformer(&mut self, transform: Box<dyn IEventTransformer>) -> &mut Self;
-    fn build(&self) -> Box<dyn IFlow>;
+    fn build(&self) -> Box<dyn IEventWorker>;
 }
