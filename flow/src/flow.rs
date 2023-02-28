@@ -1,7 +1,7 @@
 use crate::define::{IEvent, IEventBuilder, IEventReader, IEventSelector, IEventSink, IEventTransformer, IEventWriter, IFlow};
 
 pub struct EventSink<'a> {
-    pub(crate) filters: &<'a> Vec<Box<dyn IEventSelector>>,
+    pub(crate) filters: Vec<Box<dyn IEventSelector>>,
     pub(crate) transformers: Vec<Box<dyn IEventTransformer>>,
     pub(crate) writer: Box<dyn IEventWriter>,
 }
