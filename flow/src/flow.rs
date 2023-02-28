@@ -1,13 +1,13 @@
 use crate::define::{IEvent, IEventBuilder, IEventReader, IEventSelector, IEventSink, IEventTransformer, IEventWriter, IFlow};
 
 pub struct EventSink<'a> {
-    pub(crate) filters: Vec<Box<dyn IEventSelector>>,
-    pub(crate) transformers: Vec<Box<dyn IEventTransformer>>,
-    pub(crate) writer: Box<dyn IEventWriter>,
+    pub(crate) filters: Vec<Box<&'a dyn IEventSelector>>,
+    pub(crate) transformers: Vec<Box<&'a dyn IEventTransformer>>,
+    pub(crate) writer: Box<&'a dyn IEventWriter>,
 }
 
-impl IEventSink for EventSink {
-    fn next(&mut self, event: Box<dyn IEvent>) {
+impl IEventSink for EventSink<'_> {
+    fn next(&self, event: Box<dyn IEvent>) {
         let mut event = event;
         for filter in &self.filters {
             if !filter.select(Box::new(event.as_ref())) {
@@ -31,12 +31,22 @@ impl IFlow for FlowEngine {
         &self.name
     }
 
-    fn run(&mut self) {
-        self.reader.read(Box::new(EventSink {
-            filters: self.filters.clone(),
-            transformers: self.transformers.clone(),
-            writer: self.writer.clone(),
-        }));
+    fn run(&self) {
+        let mut filters: Vec<Box<&dyn IEventSelector>> = Vec::new();
+        for filter in &self.filters {
+            filters.push(Box::new(filter.as_ref()));
+        }
+        let mut transformers: Vec<Box<&dyn IEventTransformer>> = Vec::new();
+        for transformer in &self.transformers {
+            transformers.push(Box::new(transformer.as_ref()));
+        }
+        let writer = Box::new(self.writer.as_ref());
+        let sink = Box::new(EventSink {
+            writer,
+            filters,
+            transformers,
+        });
+        self.reader.read(sink);
     }
 }
 

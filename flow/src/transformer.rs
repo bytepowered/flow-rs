@@ -1,7 +1,5 @@
-use crate::define::{
-    IEvent,
-    IEventTransformer,
-};
+use crate::define::{IEvent, IEventBuilder, IEventTransformer};
+use crate::event::EventBuilder;
 
 pub struct EventTransformer {}
 
@@ -13,7 +11,7 @@ impl EventTransformer {
 
 impl IEventTransformer for EventTransformer {
     fn transform(&self, event: Box<dyn IEvent>) -> Option<Box<dyn IEvent>> {
-        let mut builder = BaseEventBuilder::new();
+        let mut builder = EventBuilder::new();
         Some(
             builder
                 .id(event.id())

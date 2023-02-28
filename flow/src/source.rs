@@ -1,27 +1,24 @@
-use crate::define::{
-    IEventSink,
-    IEventReader,
-};
+use crate::define::{IEventBuilder, IEventReader, IEventSink};
+use crate::event::EventBuilder;
 
-pub struct IterableEventSource {
+pub struct IterableEventReader {
     name: String,
     iter: u64,
 }
 
-impl IterableEventSource {
+impl IterableEventReader {
     pub fn new(name: &str, iter: u64) -> Self {
-        IterableEventSource {
+        IterableEventReader {
             name: name.to_string(),
             iter,
         }
     }
 }
 
-impl IEventReader for IterableEventSource {
-
-    fn read(&self, mut sink: Box<dyn IEventSink>) {
+impl IEventReader for IterableEventReader {
+    fn read(&self, sink: Box<dyn IEventSink>) {
         for i in 0..self.iter {
-            let mut builder = BaseEventBuilder::new();
+            let mut builder = EventBuilder::new();
             let event = builder
                 .id(i)
                 .source(format!("{}-{}", self.name, i).as_str())

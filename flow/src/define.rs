@@ -20,7 +20,7 @@ pub trait IEventReader {
 }
 
 pub trait IEventSink {
-    fn next(&mut self, event: Box<dyn IEvent>);
+    fn next(&self, event: Box<dyn IEvent>);
 }
 
 pub trait IEventSelector {
@@ -37,7 +37,7 @@ pub trait IEventTransformer {
 
 pub trait IFlow {
     fn name(&self) -> &str;
-    fn run(&mut self);
+    fn run(&self);
 }
 
 pub trait FlowBuilder {
