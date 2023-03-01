@@ -1,34 +1,35 @@
 use crate::define::{
     IEvent,
     IEventInput,
+    IEventOutput,
     IEventSelector,
     IEventSink,
     IEventTransformer,
     IEventWorker,
-    IEventOutput,
 };
 
 pub struct SynchronizedEventSink<'a> {
     pub(crate) selectors: Vec<Box<&'a dyn IEventSelector>>,
     pub(crate) transformers: Vec<Box<&'a dyn IEventTransformer>>,
-    pub(crate) writer: Box<&'a dyn IEventOutput>,
+    pub(crate) output: Box<&'a dyn IEventOutput>,
 }
 
 impl IEventSink for SynchronizedEventSink<'_> {
     fn next(&self, event: Box<dyn IEvent>) {
-        let mut event = event;
+        let mut working_event = event;
+        // Select
         for selector in &self.selectors {
-            if !selector.select(Box::new(event.as_ref())) {
+            if !selector.select(Box::new(working_event.as_ref())) {
                 return;
             }
         }
-        // transform
+        // Transform
         for transformer in &self.transformers {
-            if let Some(new_event) = transformer.transform(Box::new(event.as_ref())) {
-                event = new_event;
+            if let Some(new_event) = transformer.transform(Box::new(working_event.as_ref())) {
+                working_event = new_event;
             }
         }
-        self.writer.write(event);
+        self.output.write(working_event);
     }
 }
 
@@ -46,21 +47,29 @@ impl IEventWorker for EventWorker {
     }
 
     fn run(&self) {
+        let selectors = self.selectors();
+        let transformers = self.transformers();
+        let output = Box::new(self.output.as_ref());
+        let sink = SynchronizedEventSink { output, selectors, transformers };
+        self.input.read(Box::new(&sink));
+    }
+}
+
+impl EventWorker {
+    fn selectors(&self) -> Vec<Box<&dyn IEventSelector>> {
         let mut selectors: Vec<Box<&dyn IEventSelector>> = Vec::new();
         for selector in &self.selectors {
             selectors.push(Box::new(selector.as_ref()));
         }
+        selectors
+    }
+
+    fn transformers(&self) -> Vec<Box<&dyn IEventTransformer>> {
         let mut transformers: Vec<Box<&dyn IEventTransformer>> = Vec::new();
         for transformer in &self.transformers {
             transformers.push(Box::new(transformer.as_ref()));
         }
-        let output = Box::new(self.output.as_ref());
-        let sink = SynchronizedEventSink {
-            writer: output,
-            selectors,
-            transformers,
-        };
-        self.input.read(Box::new(&sink));
+        transformers
     }
 }
 
