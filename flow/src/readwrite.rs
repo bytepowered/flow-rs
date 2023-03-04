@@ -1,4 +1,6 @@
-use crate::define::{IEvent, IEventBuilder, IEventInput, IEventSink, IEventOutput};
+use async_trait::async_trait;
+
+use crate::define::{IEvent, IEventBuilder, IEventInput, IEventOutput, IEventSink};
 use crate::event::EventBuilder;
 
 pub struct IterableEventReader {
@@ -13,8 +15,9 @@ impl IterableEventReader {
     }
 }
 
+#[async_trait]
 impl IEventInput for IterableEventReader {
-    fn read<'a>(&self, sink: Box<&'a dyn IEventSink>) {
+    async fn read<'a>(&self, sink: Box<&'a dyn IEventSink>) -> Result<(), anyhow::Error> {
         for i in 0..self.iter {
             let mut builder = EventBuilder::new();
             let event = builder
@@ -24,10 +27,14 @@ impl IEventInput for IterableEventReader {
                 .timestamp(1)
                 .kind(0)
                 .build();
-            sink.next(event);
+            sink.next(event).await?;
         }
+        Ok(())
     }
 }
+
+unsafe impl Send for IterableEventReader {}
+unsafe impl Sync for IterableEventReader {}
 
 pub struct ConsoleEventWriter {}
 
@@ -37,8 +44,13 @@ impl ConsoleEventWriter {
     }
 }
 
+#[async_trait]
 impl IEventOutput for ConsoleEventWriter {
-    fn write(&self, event: Box<dyn IEvent>) {
+    async fn write(&self, event: Box<dyn IEvent>)  -> Result<(), anyhow::Error> {
         println!("{} {} {} {} {}", event.id(), event.source(), event.tag(), event.timestamp(), event.kind());
+        Ok(())
     }
 }
+
+unsafe impl Send for ConsoleEventWriter {}
+unsafe impl Sync for ConsoleEventWriter {}

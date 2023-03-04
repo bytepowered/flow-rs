@@ -23,3 +23,5 @@ impl IEventTransformer for EventTransformer {
         )
     }
 }
+
+unsafe impl Sync for EventTransformer {}

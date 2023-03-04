@@ -7,3 +7,5 @@ publish = false
 
 [dependencies]
 flow = { path = "../flow" }
+anyhow = "1.0.69"
+tokio = {version = "1.26.0", features = ["full"] }

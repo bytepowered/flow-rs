@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+
 use crate::define::{
     IEvent,
     IEventInput,
@@ -8,19 +10,20 @@ use crate::define::{
     IEventWorker,
 };
 
-pub struct SynchronizedEventSink<'a> {
+pub struct AsyncEventSink<'a> {
     pub(crate) selectors: Vec<Box<&'a dyn IEventSelector>>,
     pub(crate) transformers: Vec<Box<&'a dyn IEventTransformer>>,
     pub(crate) output: Box<&'a dyn IEventOutput>,
 }
 
-impl IEventSink for SynchronizedEventSink<'_> {
-    fn next(&self, event: Box<dyn IEvent>) {
+#[async_trait]
+impl IEventSink for AsyncEventSink<'_> {
+    async fn next(&self, event: Box<dyn IEvent>) -> Result<(), anyhow::Error> {
         let mut working_event = event;
         // Select
         for selector in &self.selectors {
             if !selector.select(Box::new(working_event.as_ref())) {
-                return;
+                return Ok(());
             }
         }
         // Transform
@@ -29,9 +32,14 @@ impl IEventSink for SynchronizedEventSink<'_> {
                 working_event = new_event;
             }
         }
-        self.output.write(working_event);
+        self.output.write(working_event).await?;
+        Ok(())
     }
 }
+
+unsafe impl Send for AsyncEventSink<'_> {}
+
+unsafe impl Sync for AsyncEventSink<'_> {}
 
 pub struct EventWorker {
     name: String,
@@ -41,19 +49,25 @@ pub struct EventWorker {
     transformers: Vec<Box<dyn IEventTransformer>>,
 }
 
+#[async_trait]
 impl IEventWorker for EventWorker {
     fn name(&self) -> &str {
         &self.name
     }
 
-    fn run(&self) {
+    async fn run(&self) -> Result<(), anyhow::Error> {
         let selectors = self.selectors();
         let transformers = self.transformers();
         let output = Box::new(self.output.as_ref());
-        let sink = SynchronizedEventSink { output, selectors, transformers };
-        self.input.read(Box::new(&sink));
+        let sink = AsyncEventSink { output, selectors, transformers };
+        self.input.read(Box::new(&sink)).await?;
+        Ok(())
     }
 }
+
+unsafe impl Send for EventWorker {}
+
+unsafe impl Sync for EventWorker {}
 
 impl EventWorker {
     fn selectors(&self) -> Vec<Box<&dyn IEventSelector>> {

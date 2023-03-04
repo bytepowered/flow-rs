@@ -1,4 +1,6 @@
-pub trait IEvent {
+use async_trait::async_trait;
+
+pub trait IEvent: Send + Sync {
     fn id(&self) -> u64;
     fn source(&self) -> &str;
     fn tag(&self) -> u64;
@@ -15,29 +17,33 @@ pub trait IEventBuilder {
     fn build(&self) -> Box<dyn IEvent>;
 }
 
-pub trait IEventInput {
-    fn read<'a>(&self, sink: Box<&'a dyn IEventSink>);
+#[async_trait]
+pub trait IEventInput  : Send + Sync {
+    async fn read<'a>(&self, sink: Box<&'a dyn IEventSink>) -> Result<(), anyhow::Error>;
 }
 
-pub trait IEventSink {
-    fn next(&self, event: Box<dyn IEvent>);
+#[async_trait]
+pub trait IEventSink : Send + Sync {
+    async fn next(&self, event: Box<dyn IEvent>) -> Result<(), anyhow::Error>;
 }
 
-pub trait IEventOutput {
-    fn write(&self, event: Box<dyn IEvent>);
+#[async_trait]
+pub trait IEventOutput : Send + Sync  {
+    async fn write(&self, event: Box<dyn IEvent>) -> Result<(), anyhow::Error>;
 }
 
-pub trait IEventSelector {
+pub trait IEventSelector: Sync {
     fn select(&self, event: Box<&dyn IEvent>) -> bool;
 }
 
-pub trait IEventTransformer {
+pub trait IEventTransformer: Sync {
     fn transform(&self, event: Box<&dyn IEvent>) -> Option<Box<dyn IEvent>>;
 }
 
-pub trait IEventWorker {
+#[async_trait]
+pub trait IEventWorker : Send + Sync {
     fn name(&self) -> &str;
-    fn run(&self);
+    async fn run(&self) -> Result<(), anyhow::Error>;
 }
 
 pub trait FlowBuilder {

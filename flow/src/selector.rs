@@ -20,3 +20,5 @@ impl IEventSelector for EventSelector {
         event.kind() == self.kind
     }
 }
+
+unsafe impl Sync for EventSelector {}

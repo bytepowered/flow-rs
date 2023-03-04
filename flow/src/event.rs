@@ -33,6 +33,9 @@ impl IEvent for Event {
     }
 }
 
+unsafe impl Send for Event {}
+unsafe impl Sync for Event {}
+
 pub struct EventBuilder {
     id: u64,
     source: String,
