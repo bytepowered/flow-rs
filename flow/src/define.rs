@@ -8,15 +8,6 @@ pub trait IEvent: Send + Sync {
     fn kind(&self) -> u16;
 }
 
-pub trait IEventBuilder {
-    fn id(&mut self, id: u64) -> &mut Self;
-    fn source(&mut self, source: &str) -> &mut Self;
-    fn tag(&mut self, tag: u64) -> &mut Self;
-    fn timestamp(&mut self, timestamp: u64) -> &mut Self;
-    fn kind(&mut self, kind: u16) -> &mut Self;
-    fn build(&self) -> Box<dyn IEvent>;
-}
-
 #[async_trait]
 pub trait IEventInput  : Send + Sync {
     async fn read<'a>(&self, sink: Box<&'a dyn IEventSink>) -> Result<(), anyhow::Error>;

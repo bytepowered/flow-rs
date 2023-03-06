@@ -1,5 +1,4 @@
 use crate::define::{
-    IEventBuilder,
     IEvent,
 };
 
@@ -34,6 +33,7 @@ impl IEvent for Event {
 }
 
 unsafe impl Send for Event {}
+
 unsafe impl Sync for Event {}
 
 pub struct EventBuilder {
@@ -44,33 +44,34 @@ pub struct EventBuilder {
     kind: u16,
 }
 
-impl IEventBuilder for EventBuilder {
-    fn id(&mut self, id: u64) -> &mut Self {
+impl EventBuilder {
+
+    pub fn id(&mut self, id: u64) -> &mut Self {
         self.id = id;
         self
     }
 
-    fn source(&mut self, source: &str) -> &mut Self {
+    pub fn source(&mut self, source: &str) -> &mut Self {
         self.source = source.to_string();
         self
     }
 
-    fn tag(&mut self, tag: u64) -> &mut Self {
+    pub fn tag(&mut self, tag: u64) -> &mut Self {
         self.tag = tag;
         self
     }
 
-    fn timestamp(&mut self, timestamp: u64) -> &mut Self {
+    pub fn timestamp(&mut self, timestamp: u64) -> &mut Self {
         self.timestamp = timestamp;
         self
     }
 
-    fn kind(&mut self, kind: u16) -> &mut Self {
+    pub fn kind(&mut self, kind: u16) -> &mut Self {
         self.kind = kind;
         self
     }
 
-    fn build(&self) -> Box<dyn IEvent> {
+    pub fn build(&self) -> Box<Event> {
         Box::new(Event {
             id: self.id,
             source: self.source.clone(),
@@ -79,9 +80,7 @@ impl IEventBuilder for EventBuilder {
             kind: self.kind,
         })
     }
-}
 
-impl EventBuilder {
     pub fn new() -> Self {
         EventBuilder {
             id: 0,

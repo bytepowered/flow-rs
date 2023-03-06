@@ -1,4 +1,4 @@
-use crate::define::{IEvent, IEventBuilder, IEventTransformer};
+use crate::define::{IEvent, IEventTransformer};
 use crate::event::EventBuilder;
 
 pub struct EventTransformer {}
